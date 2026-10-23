@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Decora – Room Decorator App</title>
+<style>
+:root{--cream:#FBF6EF;--ink:#2B2622;--mute:#8A7F75;--terra:#C8643B;--terra2:#E58A5F;--sage:#7C9A82;--sand:#EFE4D4;--card:#fff;--line:#EADFCF}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#d9d2c8;font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px}
+.top{text-align:center;margin-bottom:16px}
+.top b{font-size:18px;letter-spacing:-.2px}.top div{font-size:12.5px;color:#6e655c;margin-top:2px}
+.phone{width:390px;height:800px;background:var(--cream);border-radius:44px;border:10px solid #1c1a18;position:relative;overflow:hidden;flex:none;box-shadow:0 30px 60px rgba(0,0,0,.25)}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:90px;height:22px;background:#1c1a18;border-radius:14px;z-index:5}
+.screen{position:absolute;inset:0;display:none;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{display:block;animation:in .28s ease}
+@keyframes in{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.status{height:34px;display:flex;justify-content:space-between;align-items:center;padding:6px 26px 0;font-size:13px;font-weight:600}
+.pad{padding:0 20px}
+h1{font-size:25px;line-height:1.2;letter-spacing:-.4px}
+h2{font-size:20px;letter-spacing:-.3px}
+.sub{color:var(--mute);font-size:13px;line-height:1.45}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--terra);color:#fff;border-radius:16px;height:50px;font-weight:600;font-size:15px;box-shadow:0 8px 18px rgba(200,100,59,.3);cursor:pointer;border:0;width:100%;font-family:inherit;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:#fff;color:var(--terra);border:1.5px solid var(--terra);box-shadow:none}
+.chip{display:inline-flex;align-items:center;padding:8px 14px;border-radius:20px;background:#fff;border:1px solid var(--line);font-size:13px;margin:0 6px 8px 0;cursor:pointer;font-family:inherit;color:var(--ink)}
+.chip.on{background:var(--terra);color:#fff;border-color:var(--terra)}
+.nav{position:absolute;bottom:0;left:0;right:0;height:72px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;font-size:10.5px;color:var(--mute);padding-bottom:8px;z-index:3}
+.nav div{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.nav .on{color:var(--terra);font-weight:600}
+.card{background:#fff;border-radius:18px;border:1px solid var(--line)}
+.pick{cursor:pointer;transition:all .15s}
+.label{font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--mute);text-transform:uppercase;margin:18px 0 8px}
+.steps{display:flex;gap:6px;margin:8px 20px 14px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--terra)}
+.row{display:flex;align-items:center}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;flex:none}
+.sw.sel{box-shadow:0 0 0 2.5px var(--terra)}
+.back{font-size:22px;cursor:pointer;line-height:1;padding-right:6px}
+.foot{position:absolute;left:20px;right:20px;bottom:28px}
+.foot.nb{bottom:84px}
+.room{display:block;width:100%}
+.rt{padding:16px;position:relative;text-align:left}
+.rt .em{font-size:28px;display:block}
+.rt.on{border:2px solid var(--terra);background:#FFF3EB}
+.rt .tick{position:absolute;right:10px;top:8px;color:var(--terra);font-weight:700;display:none}
+.rt.on .tick{display:block}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;outline:none;margin:12px 0 4px;cursor:pointer;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--terra)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--terra)}
+.ic{text-align:center;font-size:11px;cursor:pointer}
+.ic div{width:52px;height:52px;border-radius:16px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:22px;margin:0 auto 6px}
+.toast{position:absolute;left:50%;bottom:100px;transform:translate(-50%,20px);background:rgba(43,38,34,.92);color:#fff;font-size:12.5px;padding:10px 16px;border-radius:14px;opacity:0;transition:all .25s;z-index:9;pointer-events:none;width:max-content;max-width:84%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.loader{position:absolute;inset:0;background:rgba(251,246,239,.95);z-index:8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.loader.show{display:flex}
+.spin{width:54px;height:54px;border-radius:50%;border:5px solid var(--sand);border-top-color:var(--terra);animation:sp 0.9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:8px;margin-top:18px}
+.tabs button{border:1px solid #bdb3a6;background:#fff;border-radius:18px;padding:7px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.tabs button.on{background:var(--terra);color:#fff;border-color:var(--terra)}
+@media (max-width:520px){
+  body{padding:0;background:var(--cream);justify-content:flex-start}
+  .top,.tabs{display:none}
+  .phone{width:100vw;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}
+  .notch{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="top"><b>Decora · Room Decorator App</b><div>Interactive prototype – tap the buttons to move through the screens</div></div>
+
+<div class="phone" id="phone">
+<div class="notch"></div>
+<div class="loader" id="loader"><div class="spin"></div><div><b style="font-size:17px">Analysing your room…</b><div class="sub" style="margin-top:6px">Matching style, colours and budget</div></div></div>
+<div class="toast" id="toast"></div>
+
+<!-- ================= SCREEN 1 : HOME ================= -->
+<section class="screen active" id="s1">
+ <div class="status"><span>9:41</span><span>●●● 100%</span></div>
+ <div class="pad" style="margin-top:6px">
+  <div class="row" style="justify-content:space-between">
+   <div><div class="sub">Good morning, Nihal</div><h2>Decora</h2></div>
+   <div style="width:40px;height:40px;border-radius:50%;background:var(--sand);display:grid;place-items:center;font-weight:700;color:var(--terra)">N</div>
+  </div>
+  <div style="margin-top:16px;border-radius:24px;overflow:hidden;position:relative;height:210px;background:linear-gradient(135deg,#C8643B,#E9A27C)">
+   <svg viewBox="0 0 350 210" style="position:absolute;inset:0;width:100%;height:100%"><g transform="translate(196,92) scale(.44)" id="hero"></g></svg>
+   <div style="position:absolute;left:18px;top:18px;right:42%;color:#fff">
+    <div style="font-size:19px;font-weight:700;line-height:1.2">Design your space smarter, faster &amp; your way</div>
+    <div style="margin-top:8px;font-size:12px;opacity:.9">AI suggestions from a single room photo</div>
+   </div>
+   <div class="pick" data-go="2" style="position:absolute;left:18px;bottom:16px;background:#fff;color:var(--terra);font-weight:700;font-size:13px;padding:10px 16px;border-radius:14px">＋ Start new design</div>
+  </div>
+  <div class="label" style="margin-top:20px">Choose a space</div>
+  <div class="row" style="gap:10px">
+   <div class="card pick" data-room="bedroom" style="flex:1;padding:12px 4px;text-align:center;font-size:11.5px"><div style="font-size:22px">🛏️</div>Bedroom</div>
+   <div class="card pick" data-room="living" style="flex:1;padding:12px 4px;text-align:center;font-size:11.5px"><div style="font-size:22px">🛋️</div>Living</div>
+   <div class="card pick" data-room="kitchen" style="flex:1;padding:12px 4px;text-align:center;font-size:11.5px"><div style="font-size:22px">🍳</div>Kitchen</div>
+   <div class="card pick" data-room="office" style="flex:1;padding:12px 4px;text-align:center;font-size:11.5px"><div style="font-size:22px">💼</div>Office</div>
+  </div>
+  <div class="row" style="justify-content:space-between;margin-top:20px"><h2 style="font-size:16px">Community inspiration</h2><span class="pick" data-toast="Community gallery opens here" style="font-size:12px;color:var(--terra);font-weight:600">See all</span></div>
+  <div class="row" style="gap:12px;margin-top:10px">
+   <div class="card pick" data-toast="Opens the 'Calm Scandinavian' design" style="flex:1;overflow:hidden"><svg viewBox="0 0 160 100" class="room" id="c1"></svg><div style="padding:8px 10px;font-size:12px"><b>Calm Scandinavian</b><div class="sub" style="font-size:11px">♥ 1.2k saves</div></div></div>
+   <div class="card pick" data-toast="Opens the 'Boho Corner' design" style="flex:1;overflow:hidden"><svg viewBox="0 0 160 100" class="room" id="c2"></svg><div style="padding:8px 10px;font-size:12px"><b>Boho Corner</b><div class="sub" style="font-size:11px">♥ 860 saves</div></div></div>
+  </div>
+  <div style="height:90px"></div>
+ </div>
+ <div class="nav"><div class="on"><span style="font-size:19px">🏠</span>Home</div><div data-toast="Furniture &amp; decor catalog"><span style="font-size:19px">🛒</span>Catalog</div><div data-toast="AR Preview works on a phone camera"><span style="font-size:19px">📷</span>AR Preview</div><div data-toast="Your saved designs"><span style="font-size:19px">♡</span>Saved</div><div data-toast="Your profile"><span style="font-size:19px">👤</span>Profile</div></div>
+</section>
+
+<!-- ================= SCREEN 2 : ROOM & STYLE ================= -->
+<section class="screen" id="s2">
+ <div class="status"><span>9:41</span><span>●●● 100%</span></div>
+ <div class="pad" style="margin-top:6px"><div class="row" style="gap:12px"><div class="back" data-go="1">‹</div><div class="sub" style="font-weight:600">Step 1 of 3</div></div></div>
+ <div class="steps"><i class="on"></i><i></i><i></i></div>
+ <div class="pad">
+  <h1>What are we decorating?</h1>
+  <p class="sub" style="margin-top:6px">Pick a room and the style you love. Our AI tailors suggestions to both.</p>
+  <div class="label">Room type</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="roomGrid">
+   <div class="card pick rt" data-room="bedroom"><span class="tick">✓</span><span class="em">🛏️</span><b style="font-size:14px">Bedroom</b></div>
+   <div class="card pick rt" data-room="living"><span class="tick">✓</span><span class="em">🛋️</span><b style="font-size:14px">Living Room</b></div>
+   <div class="card pick rt" data-room="kitchen"><span class="tick">✓</span><span class="em">🍳</span><b style="font-size:14px">Kitchen</b></div>
+   <div class="card pick rt" data-room="office"><span class="tick">✓</span><span class="em">💼</span><b style="font-size:14px">Home Office</b></div>
+  </div>
+  <div class="label">Design style</div>
+  <div id="styleRow"></div>
+  <div style="height:90px"></div>
+ </div>
+ <div class="foot"><button class="btn" data-go="3">Continue →</button></div>
+</section>
+
+<!-- ================= SCREEN 3 : UPLOAD ================= -->
+<section class="screen" id="s3">
+ <div class="status"><span>9:41</span><span>●●● 100%</span></div>
+ <div class="pad" style="margin-top:6px"><div class="row" style="gap:12px"><div class="back" data-go="2">‹</div><div class="sub" style="font-weight:600">Step 2 of 3</div></div></div>
+ <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+ <div class="pad">
+  <h1>Tell us about your room</h1>
+  <div class="label">Room photo</div>
+  <div class="card" style="overflow:hidden;position:relative;height:170px"><svg viewBox="0 0 350 170" id="photo" style="display:block;width:100%;height:100%"></svg>
+   <div style="position:absolute;right:10px;bottom:10px;background:rgba(43,38,34,.8);color:#fff;font-size:11px;padding:6px 10px;border-radius:12px">✓ Room detected · 12 × 11 ft</div></div>
+  <div class="row" style="gap:10px;margin-top:10px">
+   <button class="btn ghost" data-toast="Camera opens on a phone" style="flex:1;height:40px;font-size:13px;border-radius:12px">📷 Retake</button>
+   <button class="btn ghost" data-toast="Photo gallery opens on a phone" style="flex:1;height:40px;font-size:13px;border-radius:12px">🖼 Gallery</button>
+  </div>
+  <div class="label">Preferred colour palette</div>
+  <div class="row" style="gap:12px" id="palRow"></div>
+  <div class="label">Budget</div>
+  <div class="card" style="padding:14px 16px">
+   <div class="row" style="justify-content:space-between"><span class="sub">Maximum spend</span><b style="font-size:18px;color:var(--terra)" id="budVal">₹ 50,000</b></div>
+   <input type="range" id="budget" min="10000" max="150000" step="1000" value="50000">
+   <div class="row sub" style="justify-content:space-between;margin-top:6px;font-size:11px"><span>₹10k</span><span>₹1.5L</span></div>
+  </div>
+  <div style="height:90px"></div>
+ </div>
+ <div class="foot"><button class="btn" id="genBtn">✨ Generate my design</button></div>
+</section>
+
+<!-- ================= SCREEN 4 : REVIEW ================= -->
+<section class="screen" id="s4">
+ <div class="status"><span>9:41</span><span>●●● 100%</span></div>
+ <div class="pad" style="margin-top:6px"><div class="row" style="gap:12px"><div class="back" data-go="3">‹</div><div class="sub" style="font-weight:600">Step 3 of 3 · Review</div></div></div>
+ <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+ <div class="pad">
+  <div class="row" style="justify-content:space-between"><h2>Your AI design</h2><span style="background:#E6EFE8;color:#4E7A58;font-size:11px;font-weight:700;padding:5px 10px;border-radius:12px" id="match">92% style match</span></div>
+  <div class="card" style="overflow:hidden;margin-top:10px;position:relative"><svg viewBox="0 0 350 170" id="after" class="room"></svg>
+   <div id="tag" style="position:absolute;left:10px;top:10px;background:rgba(255,255,255,.9);font-size:11px;font-weight:700;padding:5px 10px;border-radius:12px">Scandinavian · Bedroom</div></div>
+  <div class="label" style="margin-top:14px">Suggested palette</div>
+  <div class="row" style="gap:8px"><div class="sw" id="p1"></div><div class="sw" style="background:#F2E8DA"></div><div class="sw" id="p3"></div><div class="sw" style="background:#3E3A36"></div><span class="sub" style="margin-left:6px" id="palTxt">Sage · Oak · Charcoal</span></div>
+  <div class="label">Recommended items</div>
+  <div class="card" style="padding:4px 14px" id="items"></div>
+  <div class="card" style="padding:12px 14px;margin-top:12px">
+   <div class="row" style="justify-content:space-between;font-size:12.5px"><span class="sub">Budget used</span><b id="used">₹ 46,800 <span class="sub">/ ₹ 50,000</span></b></div>
+   <div style="margin-top:8px;height:7px;border-radius:4px;background:var(--line)"><div id="bar" style="width:94%;height:100%;border-radius:4px;background:var(--sage);transition:width .4s"></div></div>
+   <div id="budNote" style="font-size:11px;margin-top:6px;color:var(--sage);font-weight:700">● Within budget</div>
+  </div>
+  <div style="height:100px"></div>
+ </div>
+ <div class="foot row"><button class="btn ghost" style="flex:1;margin-right:10px" data-toast="AR Preview opens the camera on a phone">📷 AR Preview</button><button class="btn" style="flex:1" id="saveBtn">Confirm &amp; Save</button></div>
+</section>
+
+<!-- ================= SCREEN 5 : SUCCESS ================= -->
+<section class="screen" id="s5">
+ <div class="status"><span>9:41</span><span>●●● 100%</span></div>
+ <div class="pad" style="text-align:center;margin-top:34px">
+  <div style="width:96px;height:96px;margin:0 auto;border-radius:50%;background:#E6EFE8;display:grid;place-items:center"><div style="width:68px;height:68px;border-radius:50%;background:var(--sage);color:#fff;font-size:38px;display:grid;place-items:center">✓</div></div>
+  <h1 style="margin-top:22px">Design saved!</h1>
+  <p class="sub" style="margin-top:8px;padding:0 20px" id="okTxt">Your Scandinavian bedroom is ready. View it in AR, share it for feedback, or buy the items.</p>
+  <div class="card" style="margin-top:22px;padding:12px;text-align:left">
+   <div class="row" style="gap:12px"><div style="width:84px;height:64px;border-radius:12px;overflow:hidden;flex:none"><svg viewBox="0 0 350 170" id="thumb" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%"></svg></div>
+    <div style="flex:1"><b style="font-size:14px" id="dName">My Calm Bedroom</b><div class="sub" style="font-size:11.5px" id="dMeta">4 items · ₹ 46,800</div><div id="dOk" style="margin-top:4px;font-size:11px;color:var(--sage);font-weight:700">● Within budget</div></div>
+    <div style="font-size:11px;color:var(--mute);text-align:right">ID<br><b style="color:var(--ink)" id="dId">#DCR-2481</b></div></div>
+  </div>
+  <div class="row" style="gap:12px;margin-top:18px;justify-content:center">
+   <div class="ic pick" data-toast="Share link copied – send it to family or friends"><div>📤</div>Share</div>
+   <div class="ic pick" data-toast="Feedback request sent"><div>💬</div>Feedback</div>
+   <div class="ic pick" data-toast="Posted to Community Inspiration"><div>🌐</div>Post</div>
+   <div class="ic pick" data-toast="Opens purchase links for the items"><div>🛒</div>Buy</div>
+  </div>
+  <div class="label" style="text-align:left;margin-top:22px">Inspired by your design</div>
+  <div class="row" style="gap:10px"><div class="card" style="flex:1;overflow:hidden"><svg viewBox="0 0 160 100" class="room" id="c3"></svg></div><div class="card" style="flex:1;overflow:hidden"><svg viewBox="0 0 160 100" class="room" id="c4"></svg></div></div>
+  <div style="height:120px"></div>
+ </div>
+ <div class="foot"><button class="btn" data-toast="AR Preview opens the camera on a phone">📷 View in AR</button><div class="pick" data-go="1" style="text-align:center;margin-top:12px;font-size:13px;color:var(--terra);font-weight:600">Back to Home</div></div>
+</section>
+</div>
+
+<div class="tabs" id="tabs">
+ <button data-go="1">1 · Home</button><button data-go="2">2 · Room &amp; Style</button><button data-go="3">3 · Upload</button><button data-go="4">4 · AI Review</button><button data-go="5">5 · Success</button>
+</div>
+
+<script>
+/* ---------- state ---------- */
+const S={room:'bedroom',style:'Scandinavian',pal:1,budget:50000};
+const ROOMS={bedroom:{n:'Bedroom',items:[['🛏️','Platform bed, oak',24500],['💡','Arc floor lamp',6200],['🪴','Rug + plant set',9800],['🖼','Wall art (set of 3)',6300]]},
+ living:{n:'Living Room',items:[['🛋️','3-seater sofa',22000],['☕','Coffee table',7500],['💡','Arc floor lamp',5200],['🪴','Rug + plant set',8600]]},
+ kitchen:{n:'Kitchen',items:[['🍽','Dining table set',18500],['💡','Pendant lights',6400],['📚','Open wall shelf',7200],['🪴','Plant + decor',5100]]},
+ office:{n:'Home Office',items:[['🖥','Standing desk',19800],['🪑','Ergonomic chair',12500],['💡','Desk lamp',3200],['📚','Shelf + decor',6400]]}};
+const STYLES={Modern:{head:'#4A4744',frame:'#3E3A36',sheet:'#E9E4DC',accent:'#C8643B',floor:'#B9A68F',wood:'#4A4744'},
+ Minimalist:{head:'#D9D4CC',frame:'#CFC8BD',sheet:'#FFFFFF',accent:'#A89F94',floor:'#E0D5C4',wood:'#CFC8BD'},
+ Scandinavian:{head:'#C9A27E',frame:'#C9A27E',sheet:'#F2E8DA',accent:'#7C9A82',floor:'#D2B48C',wood:'#C9A27E'},
+ Bohemian:{head:'#8C5E3C',frame:'#8C5E3C',sheet:'#F7EBDD',accent:'#C8643B',floor:'#B98B63',wood:'#8C5E3C'},
+ Industrial:{head:'#5B5F63',frame:'#4B4F52',sheet:'#CFCBC4',accent:'#8A6F4D',floor:'#9C9488',wood:'#5B5F63'},
+ Traditional:{head:'#7A4B32',frame:'#6B4029',sheet:'#EADBC4',accent:'#A8543A',floor:'#B58B62',wood:'#7A4B32'}};
+const PALS=[['#F2E8DA','Cream','#F2E8DA','#C9B89E'],['#9DB5A0','Sage','#DCE6DC','#7C9A82'],['#E1B7A0','Blush','#F0D9CB','#C98E73'],['#8FA7BF','Sky','#D6E2EE','#6F8BA8'],['#3E3A36','Charcoal','#8A8681','#3E3A36'],['#E6C86E','Honey','#F3E5B5','#D9AE3E']];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const inr=n=>'₹ '+n.toLocaleString('en-IN');
+
+/* ---------- illustration ---------- */
+function room(o){
+ const {w=350,h=170,wall,floor,type='bedroom',c,empty=false}=o, fy=h*.66;
+ let s=`<rect width="${w}" height="${h}" fill="${wall}"/><rect y="${fy}" width="${w}" height="${h-fy}" fill="${floor}"/><rect y="${fy-3}" width="${w}" height="3" fill="rgba(0,0,0,.08)"/>`;
+ s+=`<rect x="${w*.64}" y="${h*.12}" width="${w*.26}" height="${h*.38}" rx="3" fill="#CFE4F0"/><path d="M${w*.77} ${h*.12}V${h*.5}M${w*.64} ${h*.31}H${w*.9}" stroke="#fff" stroke-width="3"/>`;
+ if(!empty&&type!=='kitchen') s+=`<rect x="${w*.14}" y="${h*.14}" width="${w*.1}" height="${h*.2}" fill="${c.accent}" opacity=".85"/><rect x="${w*.26}" y="${h*.14}" width="${w*.1}" height="${h*.2}" fill="#fff" stroke="${c.accent}"/>`;
+ if(type==='bedroom'){
+  s+=`<rect x="${w*.1}" y="${fy-h*.3}" width="${w*.5}" height="${h*.14}" rx="5" fill="${c.head}"/><rect x="${w*.08}" y="${fy-h*.12}" width="${w*.54}" height="${h*.2}" rx="6" fill="${c.frame}"/><rect x="${w*.1}" y="${fy-h*.2}" width="${w*.5}" height="${h*.16}" rx="8" fill="${c.sheet}"/>`;
+  s+=`<rect x="${w*.13}" y="${fy-h*.27}" width="${w*.14}" height="${h*.09}" rx="5" fill="#fff"/><rect x="${w*.3}" y="${fy-h*.27}" width="${w*.14}" height="${h*.09}" rx="5" fill="${c.accent}"/><rect x="${w*.1}" y="${fy-h*.09}" width="${w*.5}" height="${h*.07}" fill="${c.accent}" opacity=".9"/>`;
+  s+=`<rect x="${w*.11}" y="${fy+h*.08}" width="6" height="${h*.06}" fill="${c.frame}"/><rect x="${w*.55}" y="${fy+h*.08}" width="6" height="${h*.06}" fill="${c.frame}"/><rect x="${w*.63}" y="${fy-h*.02}" width="${w*.08}" height="${h*.14}" rx="2" fill="${c.frame}"/>`;
+ } else if(type==='living'){
+  s+=`<rect x="${w*.08}" y="${fy-h*.26}" width="${w*.54}" height="${h*.2}" rx="9" fill="${c.head}"/><rect x="${w*.05}" y="${fy-h*.14}" width="${w*.1}" height="${h*.26}" rx="6" fill="${c.frame}"/><rect x="${w*.55}" y="${fy-h*.14}" width="${w*.1}" height="${h*.26}" rx="6" fill="${c.frame}"/><rect x="${w*.13}" y="${fy-h*.12}" width="${w*.43}" height="${h*.2}" rx="6" fill="${c.sheet}"/>`;
+  s+=`<rect x="${w*.16}" y="${fy-h*.2}" width="${w*.1}" height="${h*.09}" rx="5" fill="${c.accent}"/><rect x="${w*.42}" y="${fy-h*.2}" width="${w*.1}" height="${h*.09}" rx="5" fill="#fff"/>`;
+  s+=`<rect x="${w*.22}" y="${fy+h*.13}" width="${w*.26}" height="${h*.04}" rx="3" fill="${c.frame}"/>`;
+ } else if(type==='office'){
+  s+=`<rect x="${w*.1}" y="${fy-h*.14}" width="${w*.5}" height="${h*.035}" rx="2" fill="${c.head}"/><rect x="${w*.12}" y="${fy-h*.105}" width="5" height="${h*.26}" fill="${c.frame}"/><rect x="${w*.55}" y="${fy-h*.105}" width="5" height="${h*.26}" fill="${c.frame}"/>`;
+  s+=`<rect x="${w*.26}" y="${fy-h*.3}" width="${w*.18}" height="${h*.14}" rx="3" fill="#2B2622"/><rect x="${w*.28}" y="${fy-h*.285}" width="${w*.14}" height="${h*.11}" fill="${c.accent}" opacity=".7"/><rect x="${w*.34}" y="${fy-h*.16}" width="${w*.03}" height="${h*.02}" fill="#2B2622"/>`;
+  s+=`<rect x="${w*.34}" y="${fy-h*.02}" width="${w*.12}" height="${h*.12}" rx="6" fill="${c.accent}"/><rect x="${w*.39}" y="${fy+h*.1}" width="4" height="${h*.1}" fill="#3E3A36"/>`;
+  if(!empty) s+=`<rect x="${w*.08}" y="${fy-h*.5}" width="${w*.3}" height="4" fill="${c.frame}"/>`;
+ } else { /* kitchen */
+  s+=`<rect x="${w*.1}" y="${fy-h*.1}" width="${w*.46}" height="${h*.035}" rx="2" fill="${c.head}"/><rect x="${w*.14}" y="${fy-h*.065}" width="5" height="${h*.24}" fill="${c.frame}"/><rect x="${w*.5}" y="${fy-h*.065}" width="5" height="${h*.24}" fill="${c.frame}"/>`;
+  s+=`<rect x="${w*.08}" y="${fy-h*.04}" width="${w*.1}" height="${h*.05}" rx="4" fill="${c.accent}"/><rect x="${w*.48}" y="${fy-h*.04}" width="${w*.1}" height="${h*.05}" rx="4" fill="${c.accent}"/>`;
+  s+=`<ellipse cx="${w*.33}" cy="${fy-h*.115}" rx="${w*.05}" ry="3" fill="#fff"/>`;
+  if(!empty){ s+=`<line x1="${w*.2}" y1="0" x2="${w*.2}" y2="${h*.2}" stroke="#3E3A36"/><path d="M${w*.17} ${h*.2}a${w*.03} ${w*.03} 0 0 1 ${w*.06} 0z" fill="#F4D58D"/><line x1="${w*.45}" y1="0" x2="${w*.45}" y2="${h*.2}" stroke="#3E3A36"/><path d="M${w*.42} ${h*.2}a${w*.03} ${w*.03} 0 0 1 ${w*.06} 0z" fill="#F4D58D"/>`;
+   s+=`<rect x="${w*.1}" y="${h*.28}" width="${w*.3}" height="3" fill="${c.frame}"/>`; }
+ }
+ if(!empty) s+=`<ellipse cx="${w*.36}" cy="${fy+h*.2}" rx="${w*.26}" ry="${h*.07}" fill="${c.accent}" opacity=".35"/>`;
+ if(!empty&&type!=='kitchen') s+=`<line x1="${w*.66}" y1="${fy+h*.18}" x2="${w*.66}" y2="${h*.3}" stroke="#3E3A36" stroke-width="3"/><path d="M${w*.62} ${h*.3}h${w*.08}l-4 ${-h*.12}h${-w*.08}z" fill="#F4D58D"/>`;
+ if(!empty) s+=`<rect x="${w*.9}" y="${fy+h*.02}" width="${w*.05}" height="${h*.1}" rx="2" fill="#B5714F"/><circle cx="${w*.925}" cy="${fy-h*.02}" r="${w*.04}" fill="#6E9A74"/><circle cx="${w*.9}" cy="${fy+h*.01}" r="${w*.03}" fill="#7FAA85"/>`;
+ return s;
+}
+const BEFORE={head:'#9A8F84',frame:'#8A7F75',sheet:'#BDB5AB',accent:'#A89F94'};
+const put=(id,html)=>{const e=document.getElementById(id); if(e) e.innerHTML=html};
+
+function renderAll(){
+ const st=STYLES[S.style], pal=PALS[S.pal], R=ROOMS[S.room];
+ put('hero',room({wall:'#DCE6DC',floor:'#D2B48C',c:STYLES.Scandinavian}));
+ put('c1',room({wall:'#DCE6DC',floor:'#D2B48C',c:STYLES.Scandinavian,w:160,h:100}));
+ put('c2',room({wall:'#F0DCCB',floor:'#B98B63',c:STYLES.Bohemian,w:160,h:100,type:'living'}));
+ put('c3',room({wall:'#E4E8F0',floor:'#C9B79C',c:{head:'#5C6B80',frame:'#5C6B80',sheet:'#F4F1EB',accent:'#8FA7BF'},w:160,h:100,type:S.room}));
+ put('c4',room({wall:'#EBD9D0',floor:'#CDAA84',c:{head:'#B77A66',frame:'#B77A66',sheet:'#FAF0E8',accent:'#E1B7A0'},w:160,h:100,type:S.room}));
+ put('photo',room({wall:'#D9D4CC',floor:'#B8A896',c:BEFORE,type:S.room,empty:true}));
+ const after=room({wall:pal[2],floor:st.floor,c:{...st,accent:pal[3]},type:S.room});
+ put('after',after); put('thumb',after);
+ /* review text */
+ const total=R.items.reduce((a,i)=>a+i[2],0);
+ $('#tag').textContent=S.style+' · '+R.n;
+ $('#p1').style.background=pal[2]; $('#p3').style.background=st.wood;
+ $('#palTxt').textContent=pal[1]+' · Wood · Charcoal';
+ $('#items').innerHTML=R.items.map((i,k)=>`<div class="row" style="justify-content:space-between;padding:9px 0;${k<3?'border-bottom:1px solid var(--line);':''}font-size:13px"><span>${i[0]} ${i[1]}</span><b>${inr(i[2])}</b></div>`).join('');
+ const ok=total<=S.budget, pct=Math.min(100,total/S.budget*100);
+ $('#used').innerHTML=`${inr(total)} <span class="sub">/ ${inr(S.budget)}</span>`;
+ $('#bar').style.width=pct+'%'; $('#bar').style.background=ok?'var(--sage)':'var(--terra)';
+ const note=ok?'● Within budget':'● Over budget by '+inr(total-S.budget)+' – try cheaper alternatives';
+ $('#budNote').textContent=note; $('#budNote').style.color=ok?'var(--sage)':'var(--terra)';
+ $('#dName').textContent='My '+(S.style==='Scandinavian'?'Calm ':S.style+' ')+R.n;
+ $('#dMeta').textContent=R.items.length+' items · '+inr(total);
+ $('#dOk').textContent=ok?'● Within budget':'● Over budget'; $('#dOk').style.color=ok?'var(--sage)':'var(--terra)';
+ $('#okTxt').textContent=`Your ${S.style} ${R.n.toLowerCase()} is ready. View it in AR, share it for feedback, or buy the items.`;
+ $('#match').textContent=(88+((S.pal*3+S.style.length)%9))+'% style match';
+}
+
+/* ---------- selection UI ---------- */
+function drawSelectors(){
+ $$('#roomGrid .rt').forEach(e=>e.classList.toggle('on',e.dataset.room===S.room));
+ $('#styleRow').innerHTML=Object.keys(STYLES).map(k=>`<button class="chip${k===S.style?' on':''}" data-style="${k}">${k}</button>`).join('');
+ $('#palRow').innerHTML=PALS.map((p,i)=>`<div class="sw${i===S.pal?' sel':''}" data-pal="${i}" style="background:${p[0]}" title="${p[1]}"></div>`).join('');
+ const b=$('#budget'); const pc=(S.budget-10000)/140000*100;
+ b.style.background=`linear-gradient(90deg,var(--terra) ${pc}%,var(--line) ${pc}%)`;
+ $('#budVal').textContent=inr(S.budget);
+}
+
+/* ---------- navigation ---------- */
+function go(n){
+ $$('.screen').forEach(s=>s.classList.remove('active'));
+ const t=$('#s'+n); t.classList.add('active'); t.scrollTop=0;
+ $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.go==n));
+ if(n==2||n==3) drawSelectors(); renderAll();
+}
+let tt; function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1900)}
+
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-room],[data-style],[data-pal],[data-go],[data-toast]'); if(!t) return;
+ if(t.dataset.room){S.room=t.dataset.room; if(t.closest('#s1')){go(2);return;} drawSelectors(); renderAll(); return;}
+ if(t.dataset.style){S.style=t.dataset.style; drawSelectors(); renderAll(); return;}
+ if(t.dataset.pal){S.pal=+t.dataset.pal; drawSelectors(); renderAll(); return;}
+ if(t.dataset.go){go(t.dataset.go); return;}
+ if(t.dataset.toast){toast(t.dataset.toast);}
+});
+$('#budget').addEventListener('input',e=>{S.budget=+e.target.value; drawSelectors(); renderAll();});
+$('#genBtn').addEventListener('click',()=>{
+ const l=$('#loader'); l.classList.add('show');
+ setTimeout(()=>{l.classList.remove('show'); go(4);},1600);
+});
+$('#saveBtn').addEventListener('click',()=>{ $('#dId').textContent='#DCR-'+(1000+Math.floor(Math.random()*9000)); go(5); });
+
+go(1);
+</script>
+</body>
+</html>
